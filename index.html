@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juego de Matemáticas: Detecta el Error en la Función Exponencial</title>
+    <title>Juego de Matemáticas: Detecta el Error</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     
     <script type="text/javascript" id="MathJax-script" async
@@ -24,13 +24,11 @@
     </script>
 
     <style>
-        /* BLOQUEO ANTI-COPIA */
         * {
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
             user-select: none;
-            -webkit-touch-callout: none;
             box-sizing: border-box;
         }
 
@@ -79,7 +77,7 @@
             margin-bottom: 0.5rem;
         }
 
-        input[type="text"] { 
+        input[type="text"], select { 
             width: 100%; 
             padding: 12px; 
             border: 1px solid #d1d5db; 
@@ -89,7 +87,7 @@
             outline: none;
         }
 
-        input[type="text"]:focus {
+        input[type="text"]:focus, select:focus {
             border-color: #4f46e5;
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
         }
@@ -110,7 +108,6 @@
             line-height: 1.5;
         }
 
-        /* PROCEDIMIENTO */
         .procedure-step-container { 
             display: flex; 
             align-items: center; 
@@ -132,7 +129,6 @@
             white-space: nowrap;
         }
 
-        /* DISEÑO MEJORADO DE OPCIONES (CUADROS DIFERENCIADOS) */
         .options-container {
             display: flex;
             flex-direction: column;
@@ -275,31 +271,35 @@
             color: #991b1b;
         }
 
-        /* REGLA DE OCULTACIÓN ESTRICTA */
         .hidden { 
             display: none !important; 
         }
     </style>
 </head>
 <body oncontextmenu="return false;" ondragstart="return false;" onselectstart="return false;" oncopy="return false;">
-    <audio id="correct-sound" src="https://actions.google.com/sounds/v1/positive/bell_ring.ogg" preload="auto"></audio>
-    <audio id="incorrect-sound" src="https://actions.google.com/sounds/v1/negative/negative_beeps.ogg" preload="auto"></audio>
-    <audio id="game-over-sound" src="https://actions.google.com/sounds/v1/losses/game_over.ogg" preload="auto"></audio>
 
     <div class="container">
         <h1 class="main-title">Juego: Detecta el Error en la Función Exponencial</h1>
         
-        <!-- PANTALLA INICIAL: Solo ingreso de nombre y botón de inicio -->
         <div id="player-selection-area" class="player-area">
             <div class="input-group">
                 <label for="student-name-input" class="input-label">Escribe tu Nombre Completo:</label>
                 <input type="text" id="student-name-input" placeholder="Ej: Juan Pérez" autocomplete="off">
             </div>
+
+            <div class="input-group">
+                <label for="difficulty-select" class="input-label">Selecciona el Nivel de Dificultad:</label>
+                <select id="difficulty-select">
+                    <option value="Básico">Básico</option>
+                    <option value="Intermedio" selected>Intermedio</option>
+                    <option value="Avanzado">Avanzado</option>
+                </select>
+            </div>
+
             <button id="start-game-btn" class="submit-button">Empezar la Prueba</button>
             <div id="selection-error" class="error-message hidden">Por favor, escribe tu nombre para empezar la prueba.</div>
         </div>
 
-        <!-- CONTENEDOR DEL JUEGO (Oculto al inicio) -->
         <div id="quiz-container">
             <div id="life-counter" class="life-counter hidden"></div>
             <div id="questions-list"></div>
@@ -314,14 +314,65 @@
     <script src="preguntas.js"></script>
     
     <script>
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'PrintScreen' || (e.ctrlKey && e.key === 'p')) {
-                e.preventDefault();
+        // SINTETIZADOR DE SONIDOS CON WEB AUDIO API
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
             }
-        });
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'correct') {
+                // Tono alegre ascendente
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.1); // E5
+                osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.2); // G5
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            } else if (type === 'incorrect') {
+                // Tono grave descendente
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, now); // A3
+                osc.frequency.exponentialRampToValueAtTime(110, now + 0.25); // A2
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'victory') {
+                // Fanfarria de victoria
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.setValueAtTime(554.37, now + 0.12);
+                osc.frequency.setValueAtTime(659.25, now + 0.24);
+                osc.frequency.setValueAtTime(880, now + 0.36);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.7);
+                osc.start(now);
+                osc.stop(now + 0.7);
+            } else if (type === 'gameOver') {
+                // Sonido trágico de Game Over
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, now);
+                osc.frequency.linearRampToValueAtTime(60, now + 0.6);
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+                osc.start(now);
+                osc.stop(now + 0.6);
+            }
+        }
 
         function initializeGame() {
             const studentNameInput = document.getElementById('student-name-input');
+            const difficultySelect = document.getElementById('difficulty-select');
             const startGameBtn = document.getElementById('start-game-btn');
             const submitAnswerBtn = document.getElementById('submit-answer-btn');
             const questionsList = document.getElementById('questions-list');
@@ -330,14 +381,8 @@
             const answerErrorDiv = document.getElementById('answer-error');
             const lifeCounterDiv = document.getElementById('life-counter');
             const playerSelectionArea = document.getElementById('player-selection-area');
-            
-            const sounds = {
-                correct: document.getElementById('correct-sound'),
-                incorrect: document.getElementById('incorrect-sound'),
-                gameOver: document.getElementById('game-over-sound')
-            };
 
-            let currentQuizQuestions = [], lives = 3, questionIndex = 0, score = 0, gameStartTime;
+            let currentQuizQuestions = [], lives = 3, questionIndex = 0, score = 0, gameStartTime, selectedDifficulty = 'Intermedio';
 
             function startGame() {
                 const playerName = studentNameInput.value.trim();
@@ -347,19 +392,16 @@
                 }
                 selectionErrorDiv.classList.add('hidden');
                 
+                selectedDifficulty = difficultySelect.value;
                 playerSelectionArea.style.display = 'none';
                 resultsDiv.classList.add('hidden');
-                
-                Object.values(sounds).forEach(sound => {
-                    sound.play().catch(()=>{}); sound.pause(); sound.currentTime = 0;
-                });
 
                 lives = 3;
                 questionIndex = 0;
                 score = 0;
                 updateLifeCounter();
                 
-                currentQuizQuestions = [...allQuestions].sort(() => 0.5 - Math.random()).slice(0, 10);
+                currentQuizQuestions = obtenerPreguntasJuego(selectedDifficulty);
                 
                 lifeCounterDiv.classList.remove('hidden');
                 gameStartTime = new Date();
@@ -373,9 +415,9 @@
                 
                 const q = currentQuizQuestions[questionIndex];
                 
-                questionsList.innerHTML = `
-                    <div class="question-card">
-                        <p class="question-text">${q.question}</p>
+                let procedimientoHTML = '';
+                if (q.procedure && q.procedure.length > 0) {
+                    procedimientoHTML = `
                         <div id="procedure-steps-container" style="margin-bottom: 1.25rem;">
                             ${q.procedure.map((step, index) => `
                                 <div class="procedure-step-container">
@@ -383,7 +425,13 @@
                                     <span>${step}</span>
                                 </div>
                             `).join('')}
-                        </div>
+                        </div>`;
+                }
+
+                questionsList.innerHTML = `
+                    <div class="question-card">
+                        <p class="question-text">${q.question}</p>
+                        ${procedimientoHTML}
                         <div class="options-container">${q.options.map((option, i) => `
                             <input type="radio" name="q-option" value="${option}" id="q-option-${i}">
                             <label for="q-option-${i}" class="option-label">${option}</label>`).join('')}
@@ -426,11 +474,11 @@
                 
                 if (isCorrect) {
                     score++;
-                    sounds.correct.play();
+                    playSound('correct');
                     feedbackDiv.textContent = '¡Correcto! ✅';
                 } else {
                     lives--;
-                    sounds.incorrect.play();
+                    playSound('incorrect');
                     updateLifeCounter();
                     feedbackDiv.textContent = `Incorrecto. ❌ Te quedan ${lives} vidas.`;
                 }
@@ -464,17 +512,22 @@
                     timeStyle: 'medium' 
                 });
 
-                if (!completed) sounds.gameOver.play();
+                if (completed && score >= 6) {
+                    playSound('victory');
+                } else {
+                    playSound('gameOver');
+                }
                 
                 resultsDiv.className = `results-panel ${completed ? 'success' : 'failed'}`;
                 resultsDiv.innerHTML = `
                     <h2 class="results-title">Resumen de Resultados</h2>
                     <p style="font-size: 1.125rem; margin: 0.5rem 0;"><strong>Estudiante:</strong> ${studentName}</p>
+                    <p style="font-size: 1.125rem; margin: 0.5rem 0;"><strong>Nivel de Dificultad:</strong> ${selectedDifficulty}</p>
                     <p style="font-size: 1.125rem; margin: 0.5rem 0;"><strong>Nota Final:</strong> <span style="font-size: 1.5rem; font-weight: 800;">${notaFinal} / 5.0</span> (${score} aciertos de 10)</p>
                     <p style="margin: 0.5rem 0;"><strong>Tiempo Empleado:</strong> ${tiempoFormateado}</p>
                     <p style="margin: 0.5rem 0;"><strong>Fecha y Hora:</strong> ${fechaActual}</p>
                     <div style="margin-top: 1rem; padding-top: 1rem; text-align: center;">
-                        <button onclick="verDiploma('${encodeURIComponent(studentName)}', '${notaFinal}', '${encodeURIComponent(fechaActual)}')" class="btn-diploma">
+                        <button onclick="verDiploma('${encodeURIComponent(studentName)}', '${notaFinal}', '${encodeURIComponent(fechaActual)}', '${encodeURIComponent(selectedDifficulty)}')" class="btn-diploma">
                             🖨️ Ver / Imprimir Diploma
                         </button>
                     </div>
@@ -490,8 +543,8 @@
                 lifeCounterDiv.innerHTML = 'Vidas: ' + '❤️'.repeat(lives) + '🖤'.repeat(3 - lives);
             }
 
-            window.verDiploma = function(nombre, nota, fecha) {
-                const url = `diploma.html?nombre=${nombre}&juego=${encodeURIComponent("Detecta el Error en la Función Exponencial")}&puntaje=${nota}&fecha=${fecha}`;
+            window.verDiploma = function(nombre, nota, fecha, nivel) {
+                const url = `diploma.html?nombre=${nombre}&juego=${encodeURIComponent("Auditoría de Matemáticas")}&puntaje=${nota}&fecha=${fecha}&nivel=${nivel}`;
                 window.open(url, '_blank');
             };
 

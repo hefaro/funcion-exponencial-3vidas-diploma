@@ -158,12 +158,16 @@
         
         <div class="diploma-grid">
             <div>
-                <strong>FECHA Y HORA:</strong><br>
-                <span id="diploma-hora">--/--/---- --:--</span>
+                <strong>NIVEL:</strong><br>
+                <span id="diploma-nivel" style="font-weight: bold; color: #0f766e;">Intermedio</span>
             </div>
             <div>
                 <strong>PUNTUACIÓN:</strong><br>
                 <span id="diploma-score" style="font-weight: bold; color: #0f766e;">5.0 / 5.0</span>
+            </div>
+            <div style="grid-column: span 2;">
+                <strong>FECHA Y HORA:</strong><br>
+                <span id="diploma-hora">--/--/---- --:--</span>
             </div>
         </div>
     </div>
@@ -180,10 +184,12 @@
             const juego = params.get('juego');
             const puntaje = params.get('puntaje');
             const fecha = params.get('fecha');
+            const nivel = params.get('nivel');
 
             if (nombre) document.getElementById('diploma-nombre').innerText = decodeURIComponent(nombre);
             if (juego) document.getElementById('diploma-juego').innerText = decodeURIComponent(juego);
             if (puntaje) document.getElementById('diploma-score').innerText = `${decodeURIComponent(puntaje)} / 5.0`;
+            if (nivel) document.getElementById('diploma-nivel').innerText = decodeURIComponent(nivel);
             
             if (fecha) {
                 document.getElementById('diploma-hora').innerText = decodeURIComponent(fecha);
