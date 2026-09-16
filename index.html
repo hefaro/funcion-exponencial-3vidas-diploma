@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Matemáticas: Detecta el Error en la Función Exponencial</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']]
+            },
+            startup: {
+                pageReady: function () {
+                    MathJax.startup.defaultPageReady();
+                    initializeGame(); 
+                }
+            }
+        };
+    </script>
+
+    <style>
+        /* BLOQUEO ANTI-COPIA */
+        * {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            box-sizing: border-box;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f3f4f6; 
+            display: flex; 
+            justify-content: center; 
+            align-items: flex-start; 
+            min-height: 100vh; 
+            padding: 20px; 
+            margin: 0;
+        }
+
+        .container { 
+            background-color: #ffffff; 
+            padding: 30px; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); 
+            max-width: 800px; 
+            width: 100%; 
+            margin-top: 20px; 
+        }
+
+        .main-title {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .player-area {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        .input-label {
+            display: block;
+            color: #374151;
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        input[type="text"] { 
+            width: 100%; 
+            padding: 12px; 
+            border: 1px solid #d1d5db; 
+            border-radius: 8px; 
+            background-color: #fff; 
+            font-size: 1rem; 
+            outline: none;
+        }
+
+        input[type="text"]:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+        }
+
+        .question-card { 
+            background-color: #ffffff; 
+            padding: 20px; 
+            margin-bottom: 20px; 
+            border-radius: 12px; 
+            border: 1px solid #e2e8f0; 
+        }
+
+        .question-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 1.25rem;
+            line-height: 1.5;
+        }
+
+        /* PROCEDIMIENTO */
+        .procedure-step-container { 
+            display: flex; 
+            align-items: center; 
+            background-color: #f8fafc; 
+            border-left: 4px solid #6366f1; 
+            border-top: 1px solid #e2e8f0;
+            border-right: 1px solid #e2e8f0;
+            border-bottom: 1px solid #e2e8f0;
+            border-radius: 6px; 
+            padding: 10px 14px; 
+            margin-bottom: 8px; 
+            font-size: 0.95rem; 
+        }
+
+        .procedure-step-label { 
+            margin-right: 12px; 
+            font-weight: 700; 
+            color: #4f46e5; 
+            white-space: nowrap;
+        }
+
+        /* DISEÑO MEJORADO DE OPCIONES (CUADROS DIFERENCIADOS) */
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 1.25rem;
+        }
+
+        .option-label { 
+            display: block; 
+            padding: 14px 18px; 
+            border: 2px solid #e2e8f0; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            transition: all 0.2s ease-in-out; 
+            background-color: #f8fafc; 
+            color: #334155;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+
+        .option-label:hover { 
+            background-color: #eff6ff; 
+            border-color: #93c5fd; 
+            transform: translateY(-1px);
+        }
+
+        input[type="radio"]:checked + .option-label { 
+            background-color: #e0e7ff; 
+            border-color: #4f46e5; 
+            color: #312e81; 
+            font-weight: 600; 
+            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.15);
+        }
+
+        input[type="radio"] { 
+            display: none; 
+        }
+
+        .submit-button { 
+            background-color: #4f46e5; 
+            color: white; 
+            padding: 14px 25px; 
+            border-radius: 10px; 
+            font-weight: 600; 
+            transition: background-color 0.2s ease-in-out; 
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2); 
+            border: none; 
+            cursor: pointer; 
+            width: 100%; 
+            font-size: 1rem;
+        }
+
+        .submit-button:hover { 
+            background-color: #4338ca; 
+        }
+
+        .submit-button:disabled { 
+            background-color: #a5b4fc; 
+            cursor: not-allowed; 
+        }
+
+        .btn-diploma {
+            background-color: #0d9488;
+            color: white;
+            font-weight: 700;
+            padding: 10px 24px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-size: 1rem;
+        }
+
+        .btn-diploma:hover {
+            background-color: #0f766e;
+        }
+
+        .error-message { 
+            color: #dc2626; 
+            background-color: #fee2e2; 
+            padding: 10px; 
+            border-radius: 8px; 
+            margin-top: 15px; 
+            border: 1px solid #ef4444; 
+            text-align: center; 
+        }
+
+        .life-counter { 
+            text-align: center; 
+            font-size: 2rem; 
+            color: #ef4444; 
+            margin-bottom: 1rem; 
+        }
+
+        .results-panel {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: left;
+        }
+
+        .results-panel.success {
+            background-color: #f0fdf4;
+            border: 1px solid #86efac;
+            color: #14532d;
+        }
+
+        .results-panel.failed {
+            background-color: #fef2f2;
+            border: 1px solid #fca5a5;
+            color: #7f1d1d;
+        }
+
+        .results-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            border-bottom: 1px solid currentColor;
+            padding-bottom: 0.5rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .feedback-box {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .feedback-box.correct {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .feedback-box.incorrect {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* REGLA DE OCULTACIÓN ESTRICTA */
+        .hidden { 
+            display: none !important; 
+        }
+    </style>
+</head>
+<body oncontextmenu="return false;" ondragstart="return false;" onselectstart="return false;" oncopy="return false;">
+    <audio id="correct-sound" src="https://actions.google.com/sounds/v1/positive/bell_ring.ogg" preload="auto"></audio>
+    <audio id="incorrect-sound" src="https://actions.google.com/sounds/v1/negative/negative_beeps.ogg" preload="auto"></audio>
+    <audio id="game-over-sound" src="https://actions.google.com/sounds/v1/losses/game_over.ogg" preload="auto"></audio>
+
+    <div class="container">
+        <h1 class="main-title">Juego: Detecta el Error en la Función Exponencial</h1>
+        
+        <!-- PANTALLA INICIAL: Solo ingreso de nombre y botón de inicio -->
+        <div id="player-selection-area" class="player-area">
+            <div class="input-group">
+                <label for="student-name-input" class="input-label">Escribe tu Nombre Completo:</label>
+                <input type="text" id="student-name-input" placeholder="Ej: Juan Pérez" autocomplete="off">
+            </div>
+            <button id="start-game-btn" class="submit-button">Empezar la Prueba</button>
+            <div id="selection-error" class="error-message hidden">Por favor, escribe tu nombre para empezar la prueba.</div>
+        </div>
+
+        <!-- CONTENEDOR DEL JUEGO (Oculto al inicio) -->
+        <div id="quiz-container">
+            <div id="life-counter" class="life-counter hidden"></div>
+            <div id="questions-list"></div>
+            
+            <button id="submit-answer-btn" class="submit-button hidden">Comprobar Respuesta</button>
+
+            <div id="results" class="results-panel hidden"></div>
+            <div id="answer-error" class="error-message hidden">Por favor, selecciona una respuesta.</div>
+        </div>
+    </div>
+    
+    <script src="preguntas.js"></script>
+    
+    <script>
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'PrintScreen' || (e.ctrlKey && e.key === 'p')) {
+                e.preventDefault();
+            }
+        });
+
+        function initializeGame() {
+            const studentNameInput = document.getElementById('student-name-input');
+            const startGameBtn = document.getElementById('start-game-btn');
+            const submitAnswerBtn = document.getElementById('submit-answer-btn');
+            const questionsList = document.getElementById('questions-list');
+            const resultsDiv = document.getElementById('results');
+            const selectionErrorDiv = document.getElementById('selection-error');
+            const answerErrorDiv = document.getElementById('answer-error');
+            const lifeCounterDiv = document.getElementById('life-counter');
+            const playerSelectionArea = document.getElementById('player-selection-area');
+            
+            const sounds = {
+                correct: document.getElementById('correct-sound'),
+                incorrect: document.getElementById('incorrect-sound'),
+                gameOver: document.getElementById('game-over-sound')
+            };
+
+            let currentQuizQuestions = [], lives = 3, questionIndex = 0, score = 0, gameStartTime;
+
+            function startGame() {
+                const playerName = studentNameInput.value.trim();
+                if (playerName === '') {
+                    selectionErrorDiv.classList.remove('hidden');
+                    return;
+                }
+                selectionErrorDiv.classList.add('hidden');
+                
+                playerSelectionArea.style.display = 'none';
+                resultsDiv.classList.add('hidden');
+                
+                Object.values(sounds).forEach(sound => {
+                    sound.play().catch(()=>{}); sound.pause(); sound.currentTime = 0;
+                });
+
+                lives = 3;
+                questionIndex = 0;
+                score = 0;
+                updateLifeCounter();
+                
+                currentQuizQuestions = [...allQuestions].sort(() => 0.5 - Math.random()).slice(0, 10);
+                
+                lifeCounterDiv.classList.remove('hidden');
+                gameStartTime = new Date();
+                renderQuestion();
+            }
+
+            function renderQuestion() {
+                submitAnswerBtn.classList.remove('hidden');
+                submitAnswerBtn.disabled = false;
+                answerErrorDiv.classList.add('hidden');
+                
+                const q = currentQuizQuestions[questionIndex];
+                
+                questionsList.innerHTML = `
+                    <div class="question-card">
+                        <p class="question-text">${q.question}</p>
+                        <div id="procedure-steps-container" style="margin-bottom: 1.25rem;">
+                            ${q.procedure.map((step, index) => `
+                                <div class="procedure-step-container">
+                                    <span class="procedure-step-label">Paso ${index + 1}:</span>
+                                    <span>${step}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="options-container">${q.options.map((option, i) => `
+                            <input type="radio" name="q-option" value="${option}" id="q-option-${i}">
+                            <label for="q-option-${i}" class="option-label">${option}</label>`).join('')}
+                        </div>
+                    </div>`;
+                
+                if (window.MathJax) {
+                    MathJax.typesetPromise([questionsList]).catch((err) => console.log('MathJax Error:', err));
+                }
+            }
+
+            function checkAnswer() {
+                const selectedOption = document.querySelector('input[name="q-option"]:checked');
+                if (!selectedOption) {
+                    answerErrorDiv.classList.remove('hidden');
+                    return;
+                }
+                answerErrorDiv.classList.add('hidden');
+                submitAnswerBtn.disabled = true;
+
+                const q = currentQuizQuestions[questionIndex];
+                document.querySelectorAll('input[name="q-option"]').forEach(input => {
+                    input.disabled = true;
+                    const label = document.querySelector(`label[for="${input.id}"]`);
+                    if (input.value === q.correctAnswer) {
+                        label.style.backgroundColor = '#d1fae5';
+                        label.style.borderColor = '#10b981';
+                        label.style.color = '#065f46';
+                    }
+                    if (input.checked && input.value !== q.correctAnswer) {
+                        label.style.backgroundColor = '#fee2e2';
+                        label.style.borderColor = '#ef4444';
+                        label.style.color = '#991b1b';
+                    }
+                });
+                
+                const isCorrect = selectedOption.value === q.correctAnswer;
+                const feedbackDiv = document.createElement('div');
+                feedbackDiv.className = `feedback-box ${isCorrect ? 'correct' : 'incorrect'}`;
+                
+                if (isCorrect) {
+                    score++;
+                    sounds.correct.play();
+                    feedbackDiv.textContent = '¡Correcto! ✅';
+                } else {
+                    lives--;
+                    sounds.incorrect.play();
+                    updateLifeCounter();
+                    feedbackDiv.textContent = `Incorrecto. ❌ Te quedan ${lives} vidas.`;
+                }
+                document.querySelector('.question-card').appendChild(feedbackDiv);
+                
+                setTimeout(() => {
+                    if (lives <= 0) return endGame(false);
+                    questionIndex++;
+                    if (questionIndex < currentQuizQuestions.length) renderQuestion();
+                    else endGame(true);
+                }, 2200);
+            }
+
+            function endGame(completed) {
+                const gameEndTime = new Date();
+                questionsList.innerHTML = '';
+                submitAnswerBtn.classList.add('hidden');
+                lifeCounterDiv.classList.add('hidden');
+                resultsDiv.classList.remove('hidden');
+                
+                const studentName = studentNameInput.value.trim();
+                const notaFinal = ((score / 10) * 5).toFixed(1);
+
+                const totalSeconds = Math.round((gameEndTime - gameStartTime) / 1000);
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = totalSeconds % 60;
+                const tiempoFormateado = `${minutes} min ${seconds} seg`;
+
+                const fechaActual = gameEndTime.toLocaleString('es-CO', { 
+                    dateStyle: 'long', 
+                    timeStyle: 'medium' 
+                });
+
+                if (!completed) sounds.gameOver.play();
+                
+                resultsDiv.className = `results-panel ${completed ? 'success' : 'failed'}`;
+                resultsDiv.innerHTML = `
+                    <h2 class="results-title">Resumen de Resultados</h2>
+                    <p style="font-size: 1.125rem; margin: 0.5rem 0;"><strong>Estudiante:</strong> ${studentName}</p>
+                    <p style="font-size: 1.125rem; margin: 0.5rem 0;"><strong>Nota Final:</strong> <span style="font-size: 1.5rem; font-weight: 800;">${notaFinal} / 5.0</span> (${score} aciertos de 10)</p>
+                    <p style="margin: 0.5rem 0;"><strong>Tiempo Empleado:</strong> ${tiempoFormateado}</p>
+                    <p style="margin: 0.5rem 0;"><strong>Fecha y Hora:</strong> ${fechaActual}</p>
+                    <div style="margin-top: 1rem; padding-top: 1rem; text-align: center;">
+                        <button onclick="verDiploma('${encodeURIComponent(studentName)}', '${notaFinal}', '${encodeURIComponent(fechaActual)}')" class="btn-diploma">
+                            🖨️ Ver / Imprimir Diploma
+                        </button>
+                    </div>
+                `;
+
+                playerSelectionArea.style.display = 'block';
+                startGameBtn.textContent = 'Volver a Presentar Prueba';
+
+                if (window.MathJax) MathJax.typeset();
+            }
+
+            function updateLifeCounter() {
+                lifeCounterDiv.innerHTML = 'Vidas: ' + '❤️'.repeat(lives) + '🖤'.repeat(3 - lives);
+            }
+
+            window.verDiploma = function(nombre, nota, fecha) {
+                const url = `diploma.html?nombre=${nombre}&juego=${encodeURIComponent("Detecta el Error en la Función Exponencial")}&puntaje=${nota}&fecha=${fecha}`;
+                window.open(url, '_blank');
+            };
+
+            startGameBtn.addEventListener('click', startGame);
+            submitAnswerBtn.addEventListener('click', checkAnswer);
+        }
+    </script>
+</body>
+</html>
